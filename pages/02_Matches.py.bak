@@ -1,0 +1,32 @@
+import streamlit as st
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
+import dataset_reader
+
+st.set_page_config(page_title="Matches")
+
+mathces = dataset_reader.get_matches_data()
+delivery = dataset_reader.get_deliveries_data()
+
+st.title("Indian Premier League (Cricket)")
+
+st.markdown("""<hr style="height:5px;border:none;color:#333;background-color:#333;" /> """, unsafe_allow_html=True)
+
+st.subheader("Finals Played and Won")
+
+fig, ax = plt.subplots(10, 6)
+finals=mathces.drop_duplicates(subset=['season'],keep='last')
+finals=finals[['id','season','city','team1','team2','toss_winner','toss_decision','winner']]
+most_finals=pd.concat([finals['team1'],finals['team2']]).value_counts().reset_index()
+most_finals.rename({'index':'team',0:'count'},axis=1,inplace=True)
+xyz=finals['winner'].value_counts().reset_index()
+most_finals=most_finals.merge(xyz,left_on='team',right_on='index',how='outer')
+most_finals=most_finals.replace(np.NaN,0)
+most_finals.drop('index',axis=1,inplace=True)
+most_finals.set_index('team',inplace=True)
+most_finals.rename({'count':'finals_played','winner':'won_count'},inplace=True,axis=1)
+most_finals
+plt.bar(most_finals["finals_played"], most_finals["won_count"])
+st.pyplot(fig)
